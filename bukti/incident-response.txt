@@ -1,0 +1,36 @@
+=== SIMULASI INCIDENT RESPONSE RUNBOOK (DCSM KP R) ===
+Mon Nov 23 02:35:48 PM UTC 2026
+
+--- [FASE 1: TRIGGER & DETECTION] ---
+[1. NORMAL] Upload berhasil | Baseline SHA256=5f8878d5e383841a11380c7dfe577a14a64e2875a177566ae6b0b2ba19e8fe64
+[2. TRIGGER] Berkas /var/lib/dcsm/storage/laporan_keuangan.txt dimodifikasi secara ilegal!
+[3. DETECTED] Akses ditolak oleh server -> DATA_LOSS: Peringatan Keamanan: File di server telah diubah secara ilegal (SHA-256 Mismatch)!
+
+--- Log Audit Storage Saat Insiden Terdeteksi ---
+[AUDIT LOG] {"timestamp": "2026-11-23T14:25:42.967216Z", "service": "storage-service", "user": "zainuri", "role": "ADMIN", "action": "UPLOAD", "resource": "dokumen_rahasia.txt", "decision": "ALLOW", "reason": "SHA256: f6e9f72ae09715251cb8f09b99ee4afe13c265705c2157eec56aba43d46cc269"}
+[AUDIT LOG] {"timestamp": "2026-11-23T14:25:43.029505Z", "service": "storage-service", "user": "zainuri", "role": "ADMIN", "action": "DOWNLOAD", "resource": "dokumen_rahasia.txt", "decision": "ALLOW", "reason": "SHA256 Valid: f6e9f72ae09715251cb8f09b99ee4afe13c265705c2157eec56aba43d46cc269"}
+[AUDIT LOG] {"timestamp": "2026-11-23T14:25:43.073017Z", "service": "storage-service", "user": "tamu", "role": "GUEST", "action": "DOWNLOAD", "resource": "dokumen_rahasia.txt", "decision": "DENY", "reason": "User tidak berhak mengunduh berkas SECRET"}
+[AUDIT LOG] {"timestamp": "2026-11-23T14:35:49.657595Z", "service": "storage-service", "user": "zainuri", "role": "ADMIN", "action": "UPLOAD", "resource": "laporan_keuangan.txt", "decision": "ALLOW", "reason": "SHA256: 5f8878d5e383841a11380c7dfe577a14a64e2875a177566ae6b0b2ba19e8fe64"}
+[AUDIT LOG] {"timestamp": "2026-11-23T14:35:53.402752Z", "service": "storage-service", "user": "zainuri", "role": "ADMIN", "action": "DOWNLOAD", "resource": "laporan_keuangan.txt", "decision": "DENY", "reason": "File Integrity Compromised (Tampered!)"}
+
+--- [FASE 2: CONTAINMENT (ISOLASI LAYANAN TERDAMPAK)] ---
+networkpolicy.networking.k8s.io "allow-gateway-to-storage" deleted from dcsm-uas namespace
+[CONTAINMENT] Policy allow-gateway-to-storage dicabut -> storage-service terisolasi total.
+[CONTAINMENT VERIFIED] Jalur ke storage terputus selama karantina -> DEADLINE_EXCEEDED
+
+--- [FASE 3: RECOVERY, ROTASI SECRET & VERIFIKASI ULANG] ---
+secret/jwt-secret configured
+[RECOVERY 1] jwt-secret berhasil dirotasi dengan kunci kriptografis baru.
+deployment.apps/storage-deployment restarted
+deployment.apps/gateway-deployment restarted
+Waiting for deployment "storage-deployment" rollout to finish: 1 old replicas are pending termination...
+Waiting for deployment "storage-deployment" rollout to finish: 1 old replicas are pending termination...
+deployment "storage-deployment" successfully rolled out
+deployment "gateway-deployment" successfully rolled out
+[RECOVERY 2] Pod storage dan gateway telah digantikan dengan instance bersih.
+networkpolicy.networking.k8s.io/default-deny-ingress unchanged
+networkpolicy.networking.k8s.io/allow-gateway-to-storage created
+networkpolicy.networking.k8s.io/allow-client-to-gateway unchanged
+[RECOVERY 3] NetworkPolicy normal dipulihkan.
+[POST-RECOVERY 1 PASS] Token JWT lama otomatis tidak berlaku -> UNAUTHENTICATED
+[POST-RECOVERY 2 PASS] Layanan pulih & integritas SHA-256 terverifikasi: True

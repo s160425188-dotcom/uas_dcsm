@@ -1,0 +1,38 @@
+=== BUKTI DEPLOYMENT & KONTROL KEAMANAN (MILESTONE T2) ===
+Mon Nov 23 02:22:07 PM UTC 2026
+NAME                                      READY   STATUS    RESTARTS   AGE     IP              NODE       NOMINATED NODE   READINESS GATES
+pod/gateway-deployment-787c445845-cm4cl   1/1     Running   0          2m15s   10.244.120.70   minikube   <none>           <none>
+pod/storage-deployment-745c976f54-gpscj   1/1     Running   0          2m15s   10.244.120.69   minikube   <none>           <none>
+
+NAME                      TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)     AGE     SELECTOR
+service/gateway-service   ClusterIP   10.103.220.219   <none>        50051/TCP   2m15s   app=gateway
+service/storage-service   ClusterIP   10.107.152.116   <none>        50052/TCP   2m16s   app=storage
+
+NAME                        AGE
+serviceaccount/default      5h2m
+serviceaccount/sa-gateway   2m16s
+serviceaccount/sa-storage   2m16s
+
+NAME                                                  CREATED AT
+role.rbac.authorization.k8s.io/role-gateway-minimal   2026-11-23T14:19:51Z
+role.rbac.authorization.k8s.io/role-storage-minimal   2026-11-23T14:19:51Z
+
+NAME                                                       ROLE                        AGE     USERS   GROUPS   SERVICEACCOUNTS
+rolebinding.rbac.authorization.k8s.io/rb-gateway-minimal   Role/role-gateway-minimal   2m16s                    dcsm-uas/sa-gateway
+rolebinding.rbac.authorization.k8s.io/rb-storage-minimal   Role/role-storage-minimal   2m16s                    dcsm-uas/sa-storage
+
+NAME                                                       POD-SELECTOR   AGE
+networkpolicy.networking.k8s.io/allow-client-to-gateway    app=gateway    2m15s
+networkpolicy.networking.k8s.io/allow-gateway-to-storage   app=storage    2m15s
+networkpolicy.networking.k8s.io/default-deny-ingress       <none>         2m15s
+
+NAME                        TYPE     DATA   AGE
+secret/gateway-tls-secret   Opaque   3      6m56s
+secret/jwt-secret           Opaque   1      7m10s
+secret/storage-tls-secret   Opaque   3      6m40s
+
+--- Log Awal Gateway ---
+Secure Gateway Service running on port 50051 -> upstream storage-service:50052...
+
+--- Log Awal Storage ---
+Secure Storage Service running on port 50052 (mTLS Enabled)...

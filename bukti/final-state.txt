@@ -1,0 +1,43 @@
+=== STATUS AKHIR CLUSTER UAS DCSM (POST-RECOVERY) ===
+Mon Nov 23 02:41:21 PM UTC 2026
+NAME                                      READY   STATUS    RESTARTS   AGE     IP              NODE       NOMINATED NODE   READINESS GATES
+pod/gateway-deployment-7f56fb59c6-fbqpm   1/1     Running   0          4m18s   10.244.120.75   minikube   <none>           <none>
+pod/storage-deployment-6c8dc7d857-vgnps   1/1     Running   0          4m18s   10.244.120.74   minikube   <none>           <none>
+
+NAME                      TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)     AGE   SELECTOR
+service/gateway-service   ClusterIP   10.103.220.219   <none>        50051/TCP   21m   app=gateway
+service/storage-service   ClusterIP   10.107.152.116   <none>        50052/TCP   21m   app=storage
+
+NAME                        AGE
+serviceaccount/default      5h22m
+serviceaccount/sa-gateway   21m
+serviceaccount/sa-storage   21m
+
+NAME                                                  CREATED AT
+role.rbac.authorization.k8s.io/role-gateway-minimal   2026-11-23T14:19:51Z
+role.rbac.authorization.k8s.io/role-storage-minimal   2026-11-23T14:19:51Z
+
+NAME                                                       ROLE                        AGE   USERS   GROUPS   SERVICEACCOUNTS
+rolebinding.rbac.authorization.k8s.io/rb-gateway-minimal   Role/role-gateway-minimal   21m                    dcsm-uas/sa-gateway
+rolebinding.rbac.authorization.k8s.io/rb-storage-minimal   Role/role-storage-minimal   21m                    dcsm-uas/sa-storage
+
+NAME                                                       POD-SELECTOR   AGE
+networkpolicy.networking.k8s.io/allow-client-to-gateway    app=gateway    21m
+networkpolicy.networking.k8s.io/allow-gateway-to-storage   app=storage    4m12s
+networkpolicy.networking.k8s.io/default-deny-ingress       <none>         21m
+
+NAME                        TYPE     DATA   AGE
+secret/gateway-tls-secret   Opaque   3      26m
+secret/jwt-secret           Opaque   1      26m
+secret/storage-tls-secret   Opaque   3      25m
+
+--- Log Terbaru Gateway ---
+Secure Gateway Service running on port 50051 -> upstream storage-service:50052...
+[AUDIT LOG] {"timestamp": "2026-11-23T14:37:12.442329Z", "service": "gateway-service", "user": "invalid_user", "role": "UNKNOWN", "action": "/storage.SecureStorageService/DownloadFile", "resource": "N/A", "decision": "DENY", "reason": "Token JWT tidak valid/expired"}
+[AUDIT LOG] {"timestamp": "2026-11-23T14:37:12.472841Z", "service": "gateway-service", "user": "zainuri", "role": "ADMIN", "action": "GATEWAY_FORWARD_UPLOAD", "resource": "laporan_keuangan.txt", "decision": "ALLOW", "reason": "Forwarding to storage-service:50052"}
+[AUDIT LOG] {"timestamp": "2026-11-23T14:37:12.498089Z", "service": "gateway-service", "user": "zainuri", "role": "ADMIN", "action": "GATEWAY_FORWARD_DOWNLOAD", "resource": "laporan_keuangan.txt", "decision": "ALLOW", "reason": "Forwarding to storage-service:50052"}
+
+--- Log Terbaru Storage ---
+Secure Storage Service running on port 50052 (mTLS Enabled)...
+[AUDIT LOG] {"timestamp": "2026-11-23T14:37:12.492651Z", "service": "storage-service", "user": "zainuri", "role": "ADMIN", "action": "UPLOAD", "resource": "laporan_keuangan.txt", "decision": "ALLOW", "reason": "SHA256: 5f8878d5e383841a11380c7dfe577a14a64e2875a177566ae6b0b2ba19e8fe64"}
+[AUDIT LOG] {"timestamp": "2026-11-23T14:37:12.525988Z", "service": "storage-service", "user": "zainuri", "role": "ADMIN", "action": "DOWNLOAD", "resource": "laporan_keuangan.txt", "decision": "ALLOW", "reason": "SHA256 Valid: 5f8878d5e383841a11380c7dfe577a14a64e2875a177566ae6b0b2ba19e8fe64"}

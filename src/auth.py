@@ -1,7 +1,11 @@
+import os
 import jwt
 from datetime import datetime, timedelta
 
-SECRET_KEY = "dcsm-uts-secret-key"
+SECRET_KEY = os.environ.get("JWT_SECRET_KEY")
+if not SECRET_KEY:
+    raise RuntimeError("FATAL: Environment variable JWT_SECRET_KEY belum diset!")
+
 ALGORITHM = "HS256"
 
 def generate_token(username: str, role: str) -> str:

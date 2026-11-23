@@ -1,0 +1,24 @@
+=== LINGKUNGAN LAB UAS DCSM (KP R) ===
+Mon Nov 23 09:20:55 AM UTC 2026
+
+--- OS & Kernel ---
+Linux mochamad 6.8.0-149-generic #149-Ubuntu SMP PREEMPT_DYNAMIC Fri Oct 23 13:21:10 UTC 2026 x86_64 x86_64 x86_64 GNU/Linux
+Description:	Ubuntu 24.04.4 LTS
+
+--- Tool Versions ---
+Docker version 29.1.3, build 29.1.3-0ubuntu3~24.04.2
+v1.39.0
+Client Version: v1.35.10
+Kustomize Version: v5.7.1
+
+--- Cluster Node & IP ---
+NAME       STATUS   ROLES           AGE   VERSION   INTERNAL-IP    EXTERNAL-IP   OS-IMAGE                         KERNEL-VERSION              CONTAINER-RUNTIME
+minikube   Ready    control-plane   11m   v1.37.0   192.168.49.2   <none>        Debian GNU/Linux 12 (bookworm)   6.8.0-149-generic (amd64)   containerd://2.3.4
+
+--- CNI Calico Status ---
+NAME                READY   STATUS    RESTARTS   AGE
+calico-node-d69hr   1/1     Running   0          11m
+
+--- Namespace ---
+NAME       STATUS   AGE
+dcsm-uas   Active   106s

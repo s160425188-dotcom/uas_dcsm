@@ -1,0 +1,35 @@
+=== HASIL PENGUJIAN KONTROL KEAMANAN UAS DCSM (KP R) ===
+Mon Nov 23 02:25:41 PM UTC 2026
+
+--- [TC-01 & TC-02 & TC-03a] Pengujian dari client-pod (access=gateway-client) ---
+[TC-01a PASS] Upload SECRET via Gateway: File berhasil disimpan di storage-service. | SHA256=f6e9f72ae0971525...
+[TC-01b PASS] Download SECRET via Gateway: Integrity Match=True
+[TC-02a PASS] RBAC GUEST Ditolak -> PERMISSION_DENIED: Akses Ditolak: Dokumen berlabel SECRET.
+[TC-02b PASS] Untrusted mTLS Cert Ditolak -> UNAVAILABLE
+[TC-03a PASS] Bypass ke storage-service:50052 DIBLOKIR NetworkPolicy (TimeoutError)
+
+--- [TC-03b] Pengujian NetworkPolicy dari rogue-pod (Tanpa Label Izin) ---
+[TC-03b PASS] Akses rogue-pod ke gateway-service:50051 DIBLOKIR Calico NetworkPolicy (TimeoutError)
+[TC-03b PASS] Akses rogue-pod ke storage-service:50052 DIBLOKIR Calico NetworkPolicy (TimeoutError)
+
+--- [TC-04] Audit Kubernetes RBAC Least Privilege ---
+sa-gateway get configmaps: yes
+sa-gateway get secrets (harus no): no
+sa-storage list pods (harus no): no
+sa-storage create deployments (harus no): no
+
+--- [TC-05] Audit Container Hardening (Non-Root & ReadOnlyRootFilesystem) ---
+uid=10001(appuser) gid=10001(appuser) groups=10001(appuser)
+touch: cannot touch '/app/test_ro.txt': Read-only file system
+ls: cannot access '/var/run/secrets/kubernetes.io/serviceaccount': No such file or directory
+
+--- [TC-06] Audit Secret Management (Zero-Plaintext di YAML & Permission 0400) ---
+[TC-06a PASS] Tidak ditemukan kredensial plaintext pada manifest k8s/
+total 4
+drwxrwsrwt 3 root appuser  140 Nov 23 14:19 .
+drwxr-xr-x 3 root root    4096 Nov 23 14:19 ..
+drwxr-sr-x 2 root appuser  100 Nov 23 14:19 ..2026_11_23_14_19_52.2901911497
+lrwxrwxrwx 1 root appuser   32 Nov 23 14:19 ..data -> ..2026_11_23_14_19_52.2901911497
+lrwxrwxrwx 1 root appuser   13 Nov 23 14:19 ca.crt -> ..data/ca.crt
+lrwxrwxrwx 1 root appuser   18 Nov 23 14:19 storage.crt -> ..data/storage.crt
+lrwxrwxrwx 1 root appuser   18 Nov 23 14:19 storage.key -> ..data/storage.key

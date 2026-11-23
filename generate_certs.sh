@@ -1,24 +1,41 @@
 #!/bin/bash
-mkdir -p certs && cd certs
+set -e
+rm -rf certs && mkdir -p certs && cd certs
 
 # 1. Root CA
 openssl req -x509 -newkey rsa:4096 -days 365 -nodes \
   -keyout ca.key -out ca.crt -subj "/CN=DCSM-RootCA"
 
-# 2. Server Certificate (Valid)
+# 2. Gateway Server Certificate (SAN: gateway-service, localhost)
 openssl req -newkey rsa:2048 -nodes \
-  -keyout server.key -out server.csr -subj "/CN=storage-server"
-openssl x509 -req -in server.csr -CA ca.crt -CAkey ca.key \
-  -CAcreateserial -out server.crt -days 365
+  -keyout gateway.key -out gateway.csr -subj "/CN=gateway-service"
+cat << 'EXT' > gateway.ext
+subjectAltName = DNS:gateway-service,DNS:localhost,IP:127.0.0.1
+extendedKeyUsage = serverAuth,clientAuth
+EXT
+openssl x509 -req -in gateway.csr -CA ca.crt -CAkey ca.key \
+  -CAcreateserial -out gateway.crt -days 365 -extfile gateway.ext
 
-# 3. Client Certificate (Valid)
+# 3. Storage Server Certificate (SAN: storage-service, localhost)
+openssl req -newkey rsa:2048 -nodes \
+  -keyout storage.key -out storage.csr -subj "/CN=storage-service"
+cat << 'EXT' > storage.ext
+subjectAltName = DNS:storage-service,DNS:localhost,IP:127.0.0.1
+extendedKeyUsage = serverAuth
+EXT
+openssl x509 -req -in storage.csr -CA ca.crt -CAkey ca.key \
+  -CAcreateserial -out storage.crt -days 365 -extfile storage.ext
+
+# 4. Client Certificate (Valid)
 openssl req -newkey rsa:2048 -nodes \
   -keyout client.key -out client.csr -subj "/CN=valid-client"
 openssl x509 -req -in client.csr -CA ca.crt -CAkey ca.key \
   -CAcreateserial -out client.crt -days 365
 
-# 4. Untrusted Client Certificate (Untuk TC-RPL-03)
+# 5. Untrusted Client Certificate (Self-signed untuk uji penolakan mTLS)
 openssl req -x509 -newkey rsa:2048 -days 365 -nodes \
   -keyout bad_client.key -out bad_client.crt -subj "/CN=untrusted-client"
 
-echo "Sertifikat mTLS berhasil dibuat."
+rm -f *.csr *.ext
+chmod 644 *.crt *.key *.srl
+echo "Sertifikat mTLS dengan SAN Kubernetes berhasil dibuat."

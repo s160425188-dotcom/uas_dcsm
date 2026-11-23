@@ -1,0 +1,61 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: sa-gateway
+  namespace: dcsm-uas
+automountServiceAccountToken: false
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: sa-storage
+  namespace: dcsm-uas
+automountServiceAccountToken: false
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: role-gateway-minimal
+  namespace: dcsm-uas
+rules:
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: role-storage-minimal
+  namespace: dcsm-uas
+rules:
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: rb-gateway-minimal
+  namespace: dcsm-uas
+subjects:
+  - kind: ServiceAccount
+    name: sa-gateway
+    namespace: dcsm-uas
+roleRef:
+  kind: Role
+  name: role-gateway-minimal
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: rb-storage-minimal
+  namespace: dcsm-uas
+subjects:
+  - kind: ServiceAccount
+    name: sa-storage
+    namespace: dcsm-uas
+roleRef:
+  kind: Role
+  name: role-storage-minimal
+  apiGroup: rbac.authorization.k8s.io

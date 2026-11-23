@@ -1,0 +1,185 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: storage-deployment
+  namespace: dcsm-uas
+  labels:
+    app: storage
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: storage
+  template:
+    metadata:
+      labels:
+        app: storage
+        tier: backend
+    spec:
+      serviceAccountName: sa-storage
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+      containers:
+        - name: storage
+          image: storage:1.0
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 50052
+          env:
+            - name: SERVICE_NAME
+              value: "storage-service"
+            - name: STORAGE_PORT
+              value: "50052"
+            - name: CERT_DIR
+              value: "/etc/dcsm/certs"
+            - name: STORAGE_DIR
+              value: "/var/lib/dcsm/storage"
+            - name: LOG_DIR
+              value: "/var/log/dcsm"
+            - name: JWT_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: jwt-secret
+                  key: JWT_SECRET_KEY
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "300m"
+              memory: "256Mi"
+          volumeMounts:
+            - name: storage-certs
+              mountPath: /etc/dcsm/certs
+              readOnly: true
+            - name: storage-data-vol
+              mountPath: /var/lib/dcsm/storage
+            - name: log-vol
+              mountPath: /var/log/dcsm
+            - name: tmp-vol
+              mountPath: /tmp
+      volumes:
+        - name: storage-certs
+          secret:
+            secretName: storage-tls-secret
+            defaultMode: 0400
+        - name: storage-data-vol
+          emptyDir: {}
+        - name: log-vol
+          emptyDir: {}
+        - name: tmp-vol
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: storage-service
+  namespace: dcsm-uas
+spec:
+  type: ClusterIP
+  selector:
+    app: storage
+  ports:
+    - name: grpc
+      protocol: TCP
+      port: 50052
+      targetPort: 50052
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gateway-deployment
+  namespace: dcsm-uas
+  labels:
+    app: gateway
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gateway
+  template:
+    metadata:
+      labels:
+        app: gateway
+        tier: frontend
+    spec:
+      serviceAccountName: sa-gateway
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+      containers:
+        - name: gateway
+          image: gateway:1.0
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 50051
+          env:
+            - name: SERVICE_NAME
+              value: "gateway-service"
+            - name: GATEWAY_PORT
+              value: "50051"
+            - name: STORAGE_ADDR
+              value: "storage-service:50052"
+            - name: CERT_DIR
+              value: "/etc/dcsm/certs"
+            - name: LOG_DIR
+              value: "/var/log/dcsm"
+            - name: JWT_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: jwt-secret
+                  key: JWT_SECRET_KEY
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "300m"
+              memory: "256Mi"
+          volumeMounts:
+            - name: gateway-certs
+              mountPath: /etc/dcsm/certs
+              readOnly: true
+            - name: log-vol
+              mountPath: /var/log/dcsm
+            - name: tmp-vol
+              mountPath: /tmp
+      volumes:
+        - name: gateway-certs
+          secret:
+            secretName: gateway-tls-secret
+            defaultMode: 0400
+        - name: log-vol
+          emptyDir: {}
+        - name: tmp-vol
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gateway-service
+  namespace: dcsm-uas
+spec:
+  type: ClusterIP
+  selector:
+    app: gateway
+  ports:
+    - name: grpc
+      protocol: TCP
+      port: 50051
+      targetPort: 50051

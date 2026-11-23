@@ -1,0 +1,8 @@
+certs/
+bukti/
+k8s/
+storage_data/
+audit_logs.json
+__pycache__/
+*.pyc
+.git/

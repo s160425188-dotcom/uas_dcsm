@@ -1,20 +1,12 @@
-# Python cache
+certs/
+*.key
+*.crt
+*.csr
+*.srl
+storage_data/
+audit_logs.json
 __pycache__/
-*.py[cod]
-*$py.class
-*.so
-
-# Environments
-venv/
+*.pyc
+*.zip
 .env
-
-# IDEs
-.idea/
-.vscode/
-
-# Temporary storage runtime data (opsional, pertahankan struktur folder)
-storage_data/*
-!storage_data/.gitkeep
-
-# Operating System
-.DS_Store
+venv/
